@@ -1,0 +1,7 @@
+{
+  "name": "USB Scale Printer",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
