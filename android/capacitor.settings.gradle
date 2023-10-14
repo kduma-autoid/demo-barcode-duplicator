@@ -14,6 +14,9 @@ project(':capacitor-keyboard').projectDir = new File('../node_modules/@capacitor
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
 
+include ':kduma-autoid-capacitor-sunmi-keyboard-handler'
+project(':kduma-autoid-capacitor-sunmi-keyboard-handler').projectDir = new File('../node_modules/@kduma-autoid/capacitor-sunmi-keyboard-handler/android')
+
 include ':kduma-autoid-capacitor-sunmi-printer'
 project(':kduma-autoid-capacitor-sunmi-printer').projectDir = new File('../node_modules/@kduma-autoid/capacitor-sunmi-printer/android')
 
