@@ -3,6 +3,11 @@
     <ion-title>
       Status: {{ connected() ? 'Scale connected' : 'Please connect a USB scale' }}
     </ion-title>
+    <ion-buttons slot="primary" *ngIf="connected()">
+      <ion-button (click)="printWeight()">
+        Print
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

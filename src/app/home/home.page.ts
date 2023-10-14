@@ -2,16 +2,17 @@ import {Component, computed, effect, NgZone, Signal, signal} from '@angular/core
 import { IonicModule } from '@ionic/angular';
 import {UsbScaleService} from "../services/usb-scale.service";
 import {ScaleStatus} from "@kduma-autoid/capacitor-usb-scale";
-import {SunmiPrinter} from "@kduma-autoid/capacitor-sunmi-printer";
+import {AlignmentModeEnum, SunmiPrinter} from "@kduma-autoid/capacitor-sunmi-printer";
 import {HandleableKey, SunmiKeyboardHandler} from "@kduma-autoid/capacitor-sunmi-keyboard-handler";
 import {KeyEvent, ModifierKey} from "@kduma-autoid/capacitor-sunmi-keyboard-handler/dist/esm/definitions";
+import {NgIf} from "@angular/common";
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   standalone: true,
-  imports: [IonicModule],
+  imports: [IonicModule, NgIf],
 })
 export class HomePage {
   weight = signal<number>(0)
@@ -86,5 +87,28 @@ export class HomePage {
         await SunmiPrinter.sendLCDHibernateCommand();
       }
     });
+  }
+
+  async printWeight() {
+    let number = Math.round(this.weight());
+    try {
+      await Promise.all([
+        SunmiPrinter.enterPrinterBuffer({clean: true}),
+        SunmiPrinter.setBoldPrintStyle({enable: true}),
+        SunmiPrinter.setAlignment({alignment: AlignmentModeEnum.CENTER}),
+        SunmiPrinter.setFontSize({size: 50}),
+        SunmiPrinter.printText({text: "Weighting Result"}),
+        SunmiPrinter.lineWrap({lines: 2}),
+        SunmiPrinter.setFontSize({size: 125}),
+        SunmiPrinter.printText({text: this.weightString() + "\n"}),
+        SunmiPrinter.lineWrap({lines: 2}),
+        SunmiPrinter.printQRCode({content: number.toString(), size: 10}),
+        SunmiPrinter.lineWrap({lines: 2}),
+        SunmiPrinter.cutPaper(),
+        SunmiPrinter.exitPrinterBuffer({commit: true}),
+      ]);
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
