@@ -1,4 +1,4 @@
-import {Component, computed, NgZone, Signal, signal} from '@angular/core';
+import {Component, computed, effect, NgZone, Signal, signal} from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import {UsbScaleService} from "../services/usb-scale.service";
 import {
@@ -8,6 +8,7 @@ import {
   ScaleStatus, USBScale
 } from "@kduma-autoid/capacitor-usb-scale";
 import {App} from "@capacitor/app";
+import {SunmiPrinter} from "@kduma-autoid/capacitor-sunmi-printer";
 
 @Component({
   selector: 'app-home',
@@ -28,7 +29,7 @@ export class HomePage {
     }
 
     let kg = this.weight() / 1000;
-    return (Math.round(kg * 100) / 100) + ' kg';
+    return (Math.round(kg * 1000) / 1000) + ' kg';
   });
   status = signal<ScaleStatus|null>(null);
   correct = signal<boolean>(false);
@@ -40,6 +41,10 @@ export class HomePage {
   ) {
     this.usbScaleService.onReadCallback = this.usbScaleOnRead.bind(this);
     this.usbScaleService.onConnectionStatusChanged = this.usbScaleOnConnectionStatusChanged.bind(this);
+
+    effect(async () => {
+      await SunmiPrinter.sendLCDString({text: this.weightString()});
+    });
   }
 
   async ngOnInit() {
@@ -62,6 +67,13 @@ export class HomePage {
         this.weight.set(0);
         this.status.set(null);
         this.correct.set(false);
+      }
+
+      if(connected) {
+        await SunmiPrinter.sendLCDWakeUpCommand();
+      } else {
+        await SunmiPrinter.sendLCDClearCommand();
+        await SunmiPrinter.sendLCDHibernateCommand();
       }
     });
   }
