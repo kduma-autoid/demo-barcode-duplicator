@@ -8,7 +8,8 @@ import {
 } from "@kduma-autoid/capacitor-usb-scale";
 import {App} from "@capacitor/app";
 
-type UsbScaleServiceCallback = (event: OnReadEvent|null) => void;
+type OnReadCallback = (correct: boolean, status: ScaleStatus|null, weight: number) => void;
+type OnConnectionStatusChangedCallback = (connected: boolean) => void;
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,8 @@ export class UsbScaleService {
   private _lastWeight: number = 0;
   private _isCorrectStatus: boolean = false;
 
-  private _callback: UsbScaleServiceCallback | undefined;
+  private _onReadCallback: OnReadCallback | undefined;
+  private _onConnectionStatusChanged: OnConnectionStatusChangedCallback | undefined;
 
   constructor() {
     USBScale.addListener('onRead', (data) => this.onRead(data));
@@ -40,36 +42,60 @@ export class UsbScaleService {
     return this._isCorrectStatus;
   }
 
-  get callback(): UsbScaleServiceCallback | undefined {
-    return this._callback;
+  set onReadCallback(value: OnReadCallback | undefined) {
+    this._onReadCallback = value;
+
+    this._onReadCallback?.(this.isCorrectStatus, this.lastStatus, this.lastWeight);
   }
 
-  set callback(value: UsbScaleServiceCallback | undefined) {
-    this._callback = value;
+  set onConnectionStatusChanged(value: OnConnectionStatusChangedCallback | undefined) {
+    this._onConnectionStatusChanged = value;
+    this._onConnectionStatusChanged?.(this.connected);
   }
 
   get connected(): boolean {
     return this._connected;
   }
 
+  public async connect(device_id?: string) {
+    await USBScale.open(device_id ? { device_id: device_id } : undefined);
+
+    this._connected = true;
+
+    this._onConnectionStatusChanged?.(this.connected);
+  }
+
+  public async disconnect() {
+    await USBScale.close();
+
+    this._lastStatus = null;
+    this._lastWeight = 0;
+    this._connected = false;
+
+    this._onConnectionStatusChanged?.(this.connected);
+  }
+
   private onRead(data: OnReadEvent) {
     this._lastStatus = data.status;
     this._lastWeight = data.weight;
-    this._isCorrectStatus = data.status !== ScaleStatus.Zero && data.status !== ScaleStatus.InMotion && data.status !== ScaleStatus.Stable;
+    this._isCorrectStatus = data.status == ScaleStatus.Zero || data.status == ScaleStatus.InMotion || data.status == ScaleStatus.Stable;
+
+    this._onReadCallback?.(this.isCorrectStatus, this.lastStatus, this.lastWeight);
   }
 
   private onScaleDisconnected(data: OnScaleDisconnectedEvent) {
     this._lastStatus = null;
     this._lastWeight = 0;
     this._connected = false;
+
+    this._onConnectionStatusChanged?.(this.connected);
   }
 
   private async onScaleConnected(data: OnScaleConnectedEvent) {
     let p = await USBScale.hasPermission({ device_id: data.device.id });
-    if (!p.permission) {
+    if (p.permission) {
       try {
-        await USBScale.open();
-        this._connected = true;
+        await this.connect(data.device.id);
       } catch (err) {
         console.log(err)
       }
@@ -79,15 +105,14 @@ export class UsbScaleService {
     let listener = App.addListener('resume', async () => {
       await listener.remove();
 
-      let p = await USBScale.hasPermission();
+      let p = await USBScale.hasPermission({ device_id: data.device.id });
       if (!p.permission) {
         console.log("No permissions given.");
         return;
       }
 
       try {
-        await USBScale.open();
-        this._connected = true;
+        await this.connect(data.device.id);
       } catch (err) {
         console.log(err)
       }
