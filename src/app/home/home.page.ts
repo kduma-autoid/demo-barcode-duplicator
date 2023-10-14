@@ -1,14 +1,10 @@
 import {Component, computed, effect, NgZone, Signal, signal} from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import {UsbScaleService} from "../services/usb-scale.service";
-import {
-  OnReadEvent,
-  OnScaleConnectedEvent,
-  OnScaleDisconnectedEvent,
-  ScaleStatus, USBScale
-} from "@kduma-autoid/capacitor-usb-scale";
-import {App} from "@capacitor/app";
+import {ScaleStatus} from "@kduma-autoid/capacitor-usb-scale";
 import {SunmiPrinter} from "@kduma-autoid/capacitor-sunmi-printer";
+import {HandleableKey, SunmiKeyboardHandler} from "@kduma-autoid/capacitor-sunmi-keyboard-handler";
+import {KeyEvent, ModifierKey} from "@kduma-autoid/capacitor-sunmi-keyboard-handler/dist/esm/definitions";
 
 @Component({
   selector: 'app-home',
@@ -48,8 +44,22 @@ export class HomePage {
   }
 
   async ngOnInit() {
-
+    // await SunmiKeyboardHandler.setKeyHandler({key: HandleableKey.Cash}, async (event) => {
+    //   // await this.ngZone.run(async () => {
+    //     this.connected.set(true);
+    //   // });
+    // });
   }
+
+  // private async keyboardOnPress(data: {
+  //   key: HandleableKey;
+  //   modifiers: ModifierKey[];
+  //   type: KeyEvent;
+  // }) {
+  //   await this.ngZone.run(async () => {
+  //     this.connected.set(data.type == KeyEvent.KeyDown);
+  //   });
+  // }
 
   private async usbScaleOnRead(correct: boolean, status: ScaleStatus|null, weight: number) {
     await this.ngZone.run(async () => {
