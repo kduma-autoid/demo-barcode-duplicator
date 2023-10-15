@@ -19,6 +19,20 @@
   </ion-header>
 
   <div id="container">
-    <strong class="capitalize" style="font-size: 100px">{{ weightString() }}</strong>
+    <div class="capitalize">
+      <strong style="font-size: 100px">{{ weightString() }}</strong>
+    </div>
+    <div style="font-size: 50px; margin-top: 30px;" *ngIf="priced()">
+      X
+    </div>
+    <div class="capitalize" style="font-size: 80px; margin-top: 20px;" *ngIf="priced()">
+      {{ price() }}$
+    </div>
+    <div style="font-size: 50px; margin-top: 20px;" *ngIf="priced()">
+      =
+    </div>
+    <div class="capitalize" style="font-size: 120px; margin-top: 20px;" *ngIf="priced()">
+      <strong style="font-size: 120px">{{ totalString() }}$</strong>
+    </div>
   </div>
 </ion-content>
