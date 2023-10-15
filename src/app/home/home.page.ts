@@ -32,6 +32,7 @@ export class HomePage {
   correct = signal<boolean>(false);
   connected = signal<boolean>(false);
   priced = signal<boolean>(false);
+  calculated = signal<boolean>(false);
   priceString = signal<string>("");
   price = computed(() => {
     if(!this.priced()) {
@@ -66,7 +67,21 @@ export class HomePage {
     private usbScaleService: UsbScaleService,
   ) {
     effect(async () => {
-      await SunmiPrinter.sendLCDString({text: this.weightString()});
+      if(this.priced()) {
+        if(this.calculated()) {
+          await SunmiPrinter.sendLCDMultiString({lines: [
+            {text: this.weightString() + " x " + this.priceString() + "$ =", proportion: 2},
+            {text: this.totalString() + "$", proportion: 4},
+          ]});
+        } else {
+          await SunmiPrinter.sendLCDMultiString({lines: [
+              {text: this.weightString() + " x " + this.priceString() + "$ =", proportion: 2},
+              {text: "~$", proportion: 4},
+            ]});
+        }
+      } else {
+        await SunmiPrinter.sendLCDString({text: this.weightString()});
+      }
     });
   }
 
@@ -94,6 +109,7 @@ export class HomePage {
           await SunmiKeyboardHandler.enableHandler({key: HandleableKey.Sunmi89KeyKeyboard_NumPad});
         } else {
           this.priceString.set("");
+          this.calculated.set(false);
           await SunmiKeyboardHandler.disableHandler({key: HandleableKey.Sunmi89KeyKeyboard_NumPad});
         }
       }
@@ -111,9 +127,20 @@ export class HomePage {
     if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadMultiply) return;
     if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadSubtract) return;
     if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadAdd) return;
-    if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadEnter) return;
 
     await this.ngZone.run(async () => {
+      if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadEnter) {
+        if(!this.calculated()) {
+          this.calculated.set(true);
+        }
+        return;
+      }
+
+      if(this.calculated()) {
+        this.priceString.set("");
+        this.calculated.set(false);
+      }
+
       this.priceString.update(value => {
         if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadDivide) {
           return "";
@@ -122,7 +149,10 @@ export class HomePage {
         if(data.key == HandleableKey.Sunmi89KeyKeyboard_NumPadDot) {
           if(value.includes("."))
             return value;
+          return value += data.value;
         }
+
+        if(!value.includes(".") && value.length >= 4 || value.length >= 7) return value;
 
         return value += data.value;
       })
@@ -182,12 +212,14 @@ export class HomePage {
           SunmiPrinter.printText({text: this.priceString() + "$\n"});
           SunmiPrinter.lineWrap({lines: 1});
 
-          SunmiPrinter.setFontSize({size: 45});
-          SunmiPrinter.printText({text: "Total"});
-          SunmiPrinter.lineWrap({lines: 1});
-          SunmiPrinter.setFontSize({size: 150});
-          SunmiPrinter.printText({text: this.totalString() + "$\n"});
-          SunmiPrinter.lineWrap({lines: 1});
+          if(this.calculated()) {
+            SunmiPrinter.setFontSize({size: 45});
+            SunmiPrinter.printText({text: "Total"});
+            SunmiPrinter.lineWrap({lines: 1});
+            SunmiPrinter.setFontSize({size: 150});
+            SunmiPrinter.printText({text: this.totalString() + "$\n"});
+            SunmiPrinter.lineWrap({lines: 1});
+          }
         }
 
         SunmiPrinter.print2DCode({content: JSON.stringify({
