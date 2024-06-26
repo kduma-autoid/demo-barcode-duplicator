@@ -69,23 +69,22 @@ export class HomePage {
     try {
       let now = new Date();
         SunmiPrinter.enterPrinterBuffer({clean: true});
+        SunmiPrinter.labelLocate();
         SunmiPrinter.setBoldPrintStyle({enable: true});
         SunmiPrinter.setAlignment({alignment: AlignmentModeEnum.CENTER});
-        SunmiPrinter.setFontSize({size: 25});
-        SunmiPrinter.printText({text: now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate() + " " + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds()});
         SunmiPrinter.lineWrap({lines: 1});
-        SunmiPrinter.setFontSize({size: 50});
+        SunmiPrinter.setFontSize({size: 30});
         SunmiPrinter.printText({text: barcode});
         SunmiPrinter.lineWrap({lines: 1});
         SunmiPrinter.printBarCode({
           content: barcode,
           symbology: BarcodeSymbologyEnum.CODE_128,
-          height: 162,
+          height: 75,
           width: 2,
-          text_position: BarcodeTextPositionEnum.ABOVE_AND_BELOW
+          text_position: BarcodeTextPositionEnum.NO_TEXT
         });
         SunmiPrinter.lineWrap({lines: 2});
-        SunmiPrinter.cutPaper();
+        SunmiPrinter.labelOutput();
         SunmiPrinter.exitPrinterBuffer({commit: true});
     } catch (e) {
       console.log(e);
