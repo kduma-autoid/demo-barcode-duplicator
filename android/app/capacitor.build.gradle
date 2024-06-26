@@ -13,9 +13,8 @@ dependencies {
     implementation project(':capacitor-haptics')
     implementation project(':capacitor-keyboard')
     implementation project(':capacitor-status-bar')
-    implementation project(':kduma-autoid-capacitor-sunmi-keyboard-handler')
     implementation project(':kduma-autoid-capacitor-sunmi-printer')
-    implementation project(':kduma-autoid-capacitor-usb-scale')
+    implementation project(':kduma-autoid-capacitor-sunmi-scanhead')
 
 }
 

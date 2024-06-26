@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import {UsbScaleService} from "./services/usb-scale.service";
+
 
 @Component({
   selector: 'app-root',
@@ -10,7 +10,5 @@ import {UsbScaleService} from "./services/usb-scale.service";
   imports: [IonicModule],
 })
 export class AppComponent {
-  constructor(
-    private usbScaleService: UsbScaleService,
-  ) {}
+  constructor() {}
 }
